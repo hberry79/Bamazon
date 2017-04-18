@@ -1,5 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var currentStock = 0;
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -18,7 +19,8 @@ connection.connect(function(err) {
 });
 
 function openShop() {
-    connection.query("SELECT * FROM products", function(err, res) {
+    connection.query("SELECT * FROM products where stock_quantity > 0", function(err, res) {
+        if (err) throw err;
         console.log("-----------------------------------");
         console.log("Welcome to Heather's Haute Dress House");
         console.log("-----------------------------------");
@@ -31,33 +33,54 @@ function openShop() {
 }; //endof openShop
 
 function takeOrder() {
-    // The app should then prompt users with two messages.
-    // The first should ask them the ID of the product they would like to buy.
-    // The second message should ask how many units of the product they would like to buy.
-
     inquirer.prompt([{
         type: "input",
         name: "productID",
         message: "What is the ID of the dress you would like to purchase?",
     }]).then(function(product) {
-        console.log(product.productID);
-	        inquirer.prompt([{
-	            type: "input",
-	            name: "guestQuantity",
-	            message: "How many you would like to purchase?",
-	        }]).then(function(quantity) {
-	            console.log(quantity.guestQuantity);
-	        }); //end of inquirer.prompt
+        var productID = product.productID;
+        inquirer.prompt([{
+            type: "input",
+            name: "guestQuantity",
+            message: "How many you would like to purchase?",
+        }]).then(function(quantity) {
+            poductQuantity = quantity.guestQuantity
+            checkStock(productID, poductQuantity);
+        }); //end of inquirer.prompt
     }); //end of inquirer.prompt
-
-
-
 }; //end of takeOrder
 
-function fufillOrder() {
-    // Once the customer has placed the order, your application should check if your store has enough of the product to meet the customer's request.
-    // If not, the app should log a phrase like Insufficient quantity!, and then prevent the order from going through.
-    // However, if your store does have enough of the product, you should fulfill the customer's order.
-    // This means updating the SQL database to reflect the remaining quantity.
-    // Once the update goes through, show the customer the total cost of their purchase.
-}; //end of fufillOrder
+function checkStock(productID, poductQuantity) {
+    connection.query('SELECT stock_quantity FROM products WHERE item_id=?', [productID], function(err, res) {
+        if (err) throw err;
+        currentStock = res[0].stock_quantity;
+        if (currentStock < poductQuantity) {
+            console.log('Insufficient quantity!');
+        } else {
+            var newStock = currentStock - poductQuantity;
+            fufillOrder(productID, newStock, poductQuantity);
+        }
+    });
+} //end of checkStock
+
+function fufillOrder(productID, newStock, poductQuantity) {
+    connection.query("UPDATE products SET ? WHERE ?", [{
+        stock_quantity: newStock
+    }, {
+        item_id: productID
+    }], function(err, res) {
+        if (err) throw err;
+        connection.query('SELECT price FROM products WHERE item_id=?', [productID], function(err, res) {
+            if (err) throw err;
+            itemPrice = res[0].price;
+            var orderTotal = itemPrice * poductQuantity
+            console.log("Your total due is $" + orderTotal + ". Thank you for shopping at Heather's Haute Dress House.");
+            connection.end(function(err) {
+            if (err) {
+                throw err;
+            }
+        })
+        });
+    });
+
+} //end of fufillOrder
