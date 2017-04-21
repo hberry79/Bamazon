@@ -71,10 +71,35 @@ function lowInventory(){
 }//end lowInventory
 
 function addInventory(){
-	//ask what product they want to restock
-	//ask how many more they are stocking
-	//run query to update stock
+	inquirer.prompt([{
+        type: "input",
+        name: "restock",
+        message: "What is the ID of the dress you would like to restock?",
+    }]).then(function(product) {
+        var productID = restock.productID;
+        inquirer.prompt([{
+            type: "input",
+            name: "stockQuantity",
+            message: "How many you would like to stock?",
+        }]).then(function(quantity) {
+            poductQuantity = quantity.stockQuantity
+            addStock(productID, poductQuantity);
+        }); //end of inquirer.prompt
+    }); //end of inquirer.prompt
 }//end addInventory
+
+function addStock(productID, poductQuantity){
+	//now I need to get the current stock of that item and add the new stock to that
+    connection.query("UPDATE products SET ? WHERE ?", [{
+        stock_quantity: poductQuantity
+    }, {
+        item_id: productID
+    }], function(err, res) {
+        if (err) throw err;
+        
+        }
+   
+}//end of addStock
 
 function addNewProduct(){
 	//ask what product they want to stock
