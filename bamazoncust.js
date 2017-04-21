@@ -24,6 +24,8 @@ function openShop() {
         console.log("-----------------------------------");
         console.log("Welcome to Heather's Haute Dress House");
         console.log("-----------------------------------");
+        console.log('Item ID' + " | " + 'Product name'+ " | " + 'Department Name' + " | " + 'Price' + " | " + 'Quantity');
+        console.log("-----------------------------------");
         for (var i = 0; i < res.length; i++) {
             console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + res[i].price + " | " + res[i].stock_quantity);
         }
@@ -55,7 +57,8 @@ function checkStock(productID, poductQuantity) {
         if (err) throw err;
         currentStock = res[0].stock_quantity;
         if (currentStock < poductQuantity) {
-            console.log('Insufficient quantity!');
+            console.log('Insufficient quantity! Please place a valid order.');
+            takeOrder();
         } else {
             var newStock = currentStock - poductQuantity;
             fufillOrder(productID, newStock, poductQuantity);
@@ -76,10 +79,10 @@ function fufillOrder(productID, newStock, poductQuantity) {
             var orderTotal = itemPrice * poductQuantity
             console.log("Your total due is $" + orderTotal + ". Thank you for shopping at Heather's Haute Dress House.");
             connection.end(function(err) {
-            if (err) {
-                throw err;
-            }
-        })
+                if (err) {
+                    throw err;
+                }
+            })
         });
     });
 
